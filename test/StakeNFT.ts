@@ -1,4 +1,4 @@
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import hre, { network } from "hardhat";
 import { mintBaseNFT, mintWithSignNFT, stakeNFT } from "./utils";
@@ -18,12 +18,8 @@ describe("StakeNFT", function () {
       BASIC_PRICE,
       DISCOUNT_PRICE,
     ]);
-    const stake = await hre.viem.deployContract("StakeNFT" as any, [
-      nft.address,
-      rewardToken.address,
-      REWARD,
-    ]);
-
+    const stake = await hre.viem.deployContract("StakeNFT" as any, []);
+    await stake.write.initialize([nft.address, rewardToken.address, REWARD]);
     await rewardToken.write.mint([stake.address, REWARD_TOKEN_SUPPLY]);
     const publicClient = await hre.viem.getPublicClient();
 
@@ -95,14 +91,6 @@ describe("StakeNFT", function () {
 
     console.log(`Alice NFT balance: ${aliceBalance.toString()}`);
     expect(Number(aliceBalance)).to.equal(2);
-  });
-
-  it("should allow the owner to change reward per second", async function () {
-    const { stake } = await loadFixture(deployFixture);
-    const NEW_REWARD = 1000;
-
-    await stake.write.changeRewardPerSecond([NEW_REWARD]);
-    expect(Number(await stake.read.rewardPerSecond())).to.equal(NEW_REWARD);
   });
 
   it("should return 0 reward if NFT is not staked", async function () {

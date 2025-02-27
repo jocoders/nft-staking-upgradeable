@@ -1,0 +1,125 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x95a210ffDCb44d53Ef6eF22fe18262B357a81a6c",
+      "txHash": "0xc48916767617996ca9f868b3e3ea35031f09d6d441206697b74428ec13906586",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "6093b0d5b182efc5d3c3ed1fc7cf04ede5112107dcec62f7fd8ae753cf2e66ac": {
+      "address": "0xfD400D39A1A94A52611E301256347770b885329B",
+      "txHash": "0xdf1aefaf07eaca9c286776ace8e9f803edd7e8f90ccaf0ee6d1794192a3596ab",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "nft",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IERC721)3383",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:18"
+          },
+          {
+            "label": "rewardToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)1828",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:19"
+          },
+          {
+            "label": "stakings",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:21"
+          },
+          {
+            "label": "rewardPerSecond",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:22"
+          },
+          {
+            "label": "lastUpgradeTime",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:24"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)341_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(IERC20)1828": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC721)3383": {
+            "label": "contract IERC721",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

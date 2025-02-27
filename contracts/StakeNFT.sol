@@ -4,27 +4,32 @@ pragma solidity 0.8.28;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 /// @title StakeNFT - A contract for staking NFTs to earn rewards
 /// @author Your Name
 /// @notice This contract allows users to stake NFTs and earn rewards based on staking duration
 /// @dev This contract implements IERC721Receiver to handle receiving NFTs and uses UUPS for upgradability
-contract StakeNFT is IERC721Receiver, Ownable2Step, UUPSUpgradeable {
+contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable, AccessControl {
     using SafeERC20 for IERC20;
 
-    IERC721 public immutable nft;
-    IERC20 public immutable rewardToken;
+    IERC721 public nft;
+    IERC20 public rewardToken;
 
     mapping(uint256 => uint256) public stakings;
     uint256 public rewardPerSecond;
 
+    uint256 private lastUpgradeTime;
+
+    address private admin;
+
     event Staked(address indexed user, uint256 indexed tokenId);
     event UnStaked(address indexed user, uint256 indexed tokenId);
     event TransferReward(address indexed user, uint256 reward);
+    event AdminRoleGranted(address indexed account);
+    event ForceTransferStake(address indexed oldOwner, address indexed newOwner, uint256 indexed tokenId);
 
     error NoReward(uint256 availableReward);
     error NotOwner(address sender, address owner);
@@ -32,26 +37,24 @@ contract StakeNFT is IERC721Receiver, Ownable2Step, UUPSUpgradeable {
     error WrongNftContract(address sender, uint256 nftId);
     error InvalidNft();
     error InvalidRewardToken();
+    error UpgradeTooSoon();
+    error NotAdmin();
+    error InvalidAdmin();
+    error TokenNotStaked(uint256 tokenId);
+    error InvalidToAddress();
 
-    /// @notice Initializes the contract with NFT and reward token addresses, and reward rate
-    /// @dev Sets the immutable addresses for the NFT and reward token, and initializes staking reward rate
-    /// @param _nftContract The address of the NFT contract
-    /// @param _rewardToken The address of the reward token contract
-    /// @param _rewardPerSecond The reward rate per second for staking
-    constructor(address _nftContract, address _rewardToken, uint256 _rewardPerSecond) Ownable(msg.sender) {
-        require(_nftContract != address(0), InvalidNft());
-        require(_rewardToken != address(0), InvalidRewardToken());
-
-        nft = IERC721(_nftContract);
-        rewardToken = IERC20(_rewardToken);
-        rewardPerSecond = _rewardPerSecond;
+    modifier onlyAdmin() {
+        require(msg.sender == admin, NotAdmin());
+        _;
     }
 
-    /// @notice Changes the reward rate per second
-    /// @dev Can only be called by the owner
-    /// @param _rewardPerSecond The new reward rate per second
-    function changeRewardPerSecond(uint256 _rewardPerSecond) external onlyOwner {
-        rewardPerSecond = _rewardPerSecond;
+    /// @notice Initializes the contract with admin address
+    /// @dev Sets the immutable addresses for the NFT and reward token, and initializes staking reward rate
+    /// @param _admin The address of the admin
+    function initialize(address _admin) public reinitializer(2) {
+        require(_admin != address(0), InvalidAdmin());
+        admin = _admin;
+        emit AdminRoleGranted(_admin);
     }
 
     /// @notice Handles the receipt of an NFT
@@ -126,9 +129,28 @@ contract StakeNFT is IERC721Receiver, Ownable2Step, UUPSUpgradeable {
         emit UnStaked(owner, tokenId);
     }
 
+    function changeAdmin(address _admin) external onlyAdmin {
+        require(_admin != address(0), InvalidAdmin());
+        admin = _admin;
+        emit AdminRoleGranted(_admin);
+    }
+
+    function forceTranferStake(uint256 tokenId, address to) external onlyAdmin {
+        require(to != address(0), InvalidToAddress());
+        require(stakings[tokenId] != 0, TokenNotStaked(tokenId));
+
+        (address oldOwner, ) = _getStakeDetails(tokenId);
+        uint256 timestamp = uint256(uint96(stakings[tokenId]));
+        stakings[tokenId] = _packData(to, timestamp);
+        emit ForceTransferStake(oldOwner, to, tokenId);
+    }
+
     /// @dev Authorizes an upgrade to a new implementation of the contract
     /// @param newImplementation The address of the new contract implementation
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override {
+        require(block.timestamp >= lastUpgradeTime + 1 days, UpgradeTooSoon());
+        lastUpgradeTime = block.timestamp;
+    }
 
     /// @dev Packs the staker's address and the timestamp into a single uint256
     /// @param user The address of the staker
