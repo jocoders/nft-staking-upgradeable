@@ -7,12 +7,12 @@ import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Rec
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+
 /// @title StakeNFT - A contract for staking NFTs to earn rewards
 /// @author Your Name
 /// @notice This contract allows users to stake NFTs and earn rewards based on staking duration
 /// @dev This contract implements IERC721Receiver to handle receiving NFTs and uses UUPS for upgradability
-contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable, AccessControl {
+contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable {
     using SafeERC20 for IERC20;
 
     IERC721 public nft;
@@ -22,8 +22,7 @@ contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable, AccessCont
     uint256 public rewardPerSecond;
 
     uint256 private lastUpgradeTime;
-
-    address private admin;
+    address public admin;
 
     event Staked(address indexed user, uint256 indexed tokenId);
     event UnStaked(address indexed user, uint256 indexed tokenId);
@@ -129,18 +128,30 @@ contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable, AccessCont
         emit UnStaked(owner, tokenId);
     }
 
+    /// @notice Changes the admin of the contract
+    /// @dev This function can only be called by the current admin.
+    /// Emits an AdminRoleGranted event upon success.
+    /// @param _admin The address of the new admin
     function changeAdmin(address _admin) external onlyAdmin {
         require(_admin != address(0), InvalidAdmin());
         admin = _admin;
         emit AdminRoleGranted(_admin);
     }
 
+    /// @notice Transfers the stake of a specific tokenId to a new owner
+    /// @dev This function can only be called by the current admin.
+    /// It updates the staking record to reflect the new owner while preserving the original staking timestamp.
+    /// Emits a ForceTransferStake event upon success.
+    /// @param tokenId The identifier of the staked NFT
+    /// @param to The address of the new owner to whom the stake will be transferred
     function forceTranferStake(uint256 tokenId, address to) external onlyAdmin {
         require(to != address(0), InvalidToAddress());
-        require(stakings[tokenId] != 0, TokenNotStaked(tokenId));
+
+        uint256 stakeData = stakings[tokenId];
+        require(stakeData != 0, TokenNotStaked(tokenId));
 
         (address oldOwner, ) = _getStakeDetails(tokenId);
-        uint256 timestamp = uint256(uint96(stakings[tokenId]));
+        uint256 timestamp = uint256(uint96(stakeData));
         stakings[tokenId] = _packData(to, timestamp);
         emit ForceTransferStake(oldOwner, to, tokenId);
     }
@@ -174,7 +185,7 @@ contract StakeNFT is IERC721Receiver, Initializable, UUPSUpgradeable, AccessCont
     /// @return reward The accumulated reward
     function _getStakeDetails(uint256 tokenId) private view returns (address owner, uint256 reward) {
         owner = address(uint160(stakings[tokenId] >> 96));
-        require(msg.sender == owner, NotOwner(msg.sender, owner));
+        require(msg.sender == owner || msg.sender == admin, NotOwner(msg.sender, owner));
         reward = checkReward(tokenId);
     }
 }

@@ -5,6 +5,11 @@
       "address": "0x95a210ffDCb44d53Ef6eF22fe18262B357a81a6c",
       "txHash": "0xc48916767617996ca9f868b3e3ea35031f09d6d441206697b74428ec13906586",
       "kind": "uups"
+    },
+    {
+      "address": "0x3194EABff52D3A1102688D8759780283C0f66A8E",
+      "txHash": "0x9eebde0ade0bcb26fe359224e0435af08ed6c3de787e2754b768d270c23f8910",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -87,6 +92,131 @@
             "numberOfBytes": "20"
           },
           "t_contract(IERC721)3383": {
+            "label": "contract IERC721",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "d985fa548e55b262be423229c0d054c16f1dc96554dadbd922a26a84d4a06068": {
+      "address": "0x2da03ce64b15019553DeEbA15623e453708EF465",
+      "txHash": "0x79093c742540a7f67fc745b9f25cdb234e8d177e858c474a2349570837cbc554",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "nft",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IERC721)1448",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:18"
+          },
+          {
+            "label": "rewardToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(IERC20)922",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:19"
+          },
+          {
+            "label": "stakings",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:21"
+          },
+          {
+            "label": "rewardPerSecond",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:22"
+          },
+          {
+            "label": "lastUpgradeTime",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:24"
+          },
+          {
+            "label": "admin",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "StakeNFT",
+            "src": "contracts/StakeNFT.sol:25"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)205_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC20)922": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC721)1448": {
             "label": "contract IERC721",
             "numberOfBytes": "20"
           },

@@ -11,7 +11,7 @@ const REWARD_TOKEN_SUPPLY = BigInt(1_000_000) * BigInt(10 ** TOKEN_DECIMALS);
 
 describe("StakeNFT", function () {
   async function deployFixture() {
-    const [owner, Alice, Bob] = await hre.viem.getWalletClients();
+    const [owner, admin, Alice, Bob] = await hre.viem.getWalletClients();
 
     const rewardToken = await hre.viem.deployContract("RewardToken", []);
     const nft = await hre.viem.deployContract("LimitedEditionNFT" as any, [
@@ -19,7 +19,12 @@ describe("StakeNFT", function () {
       DISCOUNT_PRICE,
     ]);
     const stake = await hre.viem.deployContract("StakeNFT" as any, []);
-    await stake.write.initialize([nft.address, rewardToken.address, REWARD]);
+    await stake.write.initialize([
+      nft.address,
+      rewardToken.address,
+      REWARD,
+      admin.account.address,
+    ]);
     await rewardToken.write.mint([stake.address, REWARD_TOKEN_SUPPLY]);
     const publicClient = await hre.viem.getPublicClient();
 
@@ -29,6 +34,7 @@ describe("StakeNFT", function () {
       nft,
       stake,
       owner,
+      admin,
       Alice,
       Bob,
     };
@@ -37,6 +43,13 @@ describe("StakeNFT", function () {
   it("should mint exact amount of RewardToken", async function () {
     const { publicClient, rewardToken, nft, stake, owner, Alice, Bob } =
       await loadFixture(deployFixture);
+
+    console.log("nft", nft.address);
+    console.log("rewardToken", rewardToken.address);
+    console.log("stake", stake.address);
+    console.log("owner", owner.account.address);
+    console.log("Alice", Alice.account.address);
+    console.log("Bob", Bob.account.address);
 
     const rewardTokenBalance = await rewardToken.read.balanceOf([
       stake.address,
@@ -201,5 +214,55 @@ describe("StakeNFT", function () {
       Alice.account.address,
     ])) as BigInt;
     expect(Number(balanceTo)).to.equal(1);
+  });
+
+  it("should successfuly forceTranferStake", async function () {
+    const { stake, nft, rewardToken, Alice, Bob, admin } =
+      await loadFixture(deployFixture);
+    const TOKEN_ID = 1768;
+    await mintBaseNFT(nft, Alice.account.address, BASIC_PRICE);
+    const ownerOf = await nft.read.ownerOf([TOKEN_ID]);
+    expect(String(ownerOf).toUpperCase()).to.equal(
+      Alice.account.address.toUpperCase(),
+    );
+    const { balanceStake } = await stakeNFT(stake, nft, TOKEN_ID, Alice);
+    expect(Number(balanceStake)).to.equal(1);
+    await network.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+    await network.provider.send("evm_mine", []);
+    const reward = await stake.read.checkReward([TOKEN_ID]);
+    expect(Number(reward)).to.equal(REWARD * 86400 * 7);
+
+    await stake.write.forceTranferStake([TOKEN_ID, Bob.account.address], {
+      account: admin.account,
+    });
+    await stake.write.withdrawNFT([TOKEN_ID], {
+      account: Bob.account,
+    });
+    const remainedBalanceStake = await stake.read.checkReward([TOKEN_ID]);
+    expect(Number(remainedBalanceStake)).to.equal(0);
+    const balanceRewardToken = await rewardToken.read.balanceOf([
+      Bob.account.address,
+    ]);
+    expect(Number(balanceRewardToken)).to.greaterThan(Number(reward));
+    const balanceTo = (await nft.read.balanceOf([
+      Bob.account.address,
+    ])) as BigInt;
+    expect(Number(balanceTo)).to.equal(1);
+  });
+
+  it("should sucessfully change admin", async function () {
+    const { stake, admin, Alice } = await loadFixture(deployFixture);
+    const currentAdmin = await stake.read.admin();
+    expect(String(currentAdmin).toUpperCase()).to.equal(
+      admin.account.address.toUpperCase(),
+    );
+
+    await stake.write.changeAdmin([Alice.account.address], {
+      account: admin.account,
+    });
+    const newAdmin = await stake.read.admin();
+    expect(String(newAdmin).toUpperCase()).to.equal(
+      Alice.account.address.toUpperCase(),
+    );
   });
 });
